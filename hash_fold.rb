@@ -1,15 +1,36 @@
 class HashFold
+	def merge_hash(hash, k, v)
+		if hash.key? k
+			hash[k] = self.fold(hash[k], v)
+		else
+			hash[k] = v
+		end
+	end
+
 	def start(filepaths)
-		result = {}
-		filepaths.each do |fp|
-			self.map(fp) do |k, v|
-				if result.key? k
-					result[k] = self.fold(result[k], v)
-				else
-					result[k] = v
+		result = nil
+		filepaths.map do |fp|
+			read,write = IO.pipe
+			fork do
+				read.close
+				h = {}
+				self.map(fp) do |k,v|
+					merge_hash(h, k, v)
 				end
+				Marshal.dump(h, write)
+				write.close
+			end
+			read
+		end.each do |r|
+			h = Marshal.load r
+			if result
+				h.each do |k,v|
+					merge_hash(hash, k, v)
+				end
+			else
+				result = h
 			end
 		end
-		return result
+		result
 	end
 end
