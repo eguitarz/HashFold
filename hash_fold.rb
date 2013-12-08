@@ -64,7 +64,7 @@ class HashFold
 			fill
 			@results.pop
 		end
-	end
+	end # pool end
 
 	def initialize(n=2)
 		@pool = Pool.new(self, n)
